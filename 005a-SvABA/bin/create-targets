@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT
+## USAGE:
+##	bin/create-targets
+
+# Generate targets for BAM files to estimate structural variation using SVaBA.
+find -L data/ \
+	-type f \
+	-name "*_sorted.bam" \
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.bam##" \
