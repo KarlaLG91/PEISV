@@ -1,0 +1,35 @@
+## DESCRIPTION:
+## mk module for the detection and genotype of structural variants using the merged SV site list, using BAM type of data.
+## The script uses Delly to detect and genotype structural variants from a BAM file and using the merged SV site list in BCF format.
+##
+## USAGE:
+## Alternative 1: Single target execution.
+##      `mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##      `bin/targets | xargs mk`
+##
+## AUTHOR:
+##      Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+## Load variables from config
+< config.mk
+
+## Genotype merged SV site list across all samples by calling SV from single bam files.
+results/%.delly_genotyped.bcf: data/%.bam $SITES_BCF $REF
+	set -x
+	mkdir -p $(dirname $target)
+	$DELLY call \
+		-o $target.build \
+		-g $REF \
+		-v $SITES_BCF \
+		data/$stem.bam \
+	&& mv $target.build $target \
+	&& mv $target.build.csi $target.csi
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+        rm -r results/
+

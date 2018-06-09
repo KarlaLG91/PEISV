@@ -1,0 +1,36 @@
+## DESCRIPTION:
+## mk module for the merge of structural variant sites into a unified site list, using BCF files generated with Delly variant calling.
+## The script uses Delly to merge structural variant sites into a unified site list from a BCF files.
+##
+## USAGE:
+## Alternative 1: Single target execution.
+##      `mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##      `bin/targets | xargs mk`
+##
+## AUTHOR:
+##      Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+## Load variables from config
+< config.mk
+
+## Merge SV sites into a unified site list
+results/%.dellymerged.bcf: data/%
+	set -x
+	mkdir -p $(dirname $target)
+	SAMPLES=`ls $prereq/*.bcf | tr "\n" " "`
+	$DELLY merge \
+		--minsize $MIN_SIZE \
+		--maxsize $MAX_SIZE \
+		--rec-overlap $RECIPROCAL_OVERLAP \
+		--outfile $target.build \
+		$SAMPLES \
+	&& mv $target.build $target \
+	&& mv $target.build.csi $target.csi
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/

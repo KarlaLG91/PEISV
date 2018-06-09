@@ -1,0 +1,50 @@
+## DESCRIPTION:
+## mk module Structural Variant (SV) BCF file joining and germline filtering using mk-delly pipeline.
+## The script performs merging of multiple BCF files from SV calling into a single multisample bcf file; then, applies Delly2 germline filtering to keep only SV that pass the criteria of the filter.
+##
+## USAGE:
+## Alternative 1: Single target execution.
+##      `mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##      bin/targets | xargs mk
+##
+## AUTHOR:
+##      Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+## Load variables from config
+< config.mk
+
+#Apply the germline SV filter
+results/%.delly_germline_filtered.bcf: results/%.merged_unfiltered.bcf
+	set -x
+	mkdir -p $(dirname $target)
+	$DELLY filter \
+	-f germline \
+	-o $target.build \
+	-p \
+	$prereq \
+	&& mv $target.build $target \
+	&& mv $target.build.csi $target.csi
+
+#Merge all re-genotyped samples to get a single VCF/BCF using bcftools merge
+results/%.merged_unfiltered.bcf: data/%
+	set -x
+        mkdir -p $(dirname $target)
+	bcftools merge \
+	-m id \
+	-O b \
+	-o $target.build \
+	$prereq/*.bcf \
+	&& mv $target.build $target \
+	&& bcftools index -f $target
+
+#clean:V:
+#	rm results/*.merged_unfiltered.bcf*
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+        rm -r results/
+

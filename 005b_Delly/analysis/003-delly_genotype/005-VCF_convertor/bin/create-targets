@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT.
+## USAGE:
+##	bin/create-targets
+
+# Generate targets for BCF files to be converted to VCF format.
+find -L data/ \
+	-type f \
+	-name "*.bcf"\
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.bcf#.vcf#"

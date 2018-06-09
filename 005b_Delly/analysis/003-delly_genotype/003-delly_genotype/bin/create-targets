@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##      Script to print required mk targets to STDOUT.
+## USAGE:
+##      bin/create-targets
+
+# Generate targets for BAM files to be analised using Delly.
+find -L data/ \
+	-type f \
+	-name "*.bam" \
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.bam#.delly_genotyped.bcf#"

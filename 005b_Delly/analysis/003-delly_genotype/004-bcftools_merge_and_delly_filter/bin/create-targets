@@ -1,0 +1,15 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##      Script to print required mk targets to STDOUT.
+## USAGE:
+##      bin/create-targets
+
+# Generate targets for directories containing BCF files to be analised using Delly.
+
+find -L data/ \
+	-maxdepth 1 \
+	-mindepth 1 \
+	-type d \
+| sed 	-e "s#data/#results/#" \
+	-e "s#\$#.delly_germline_filtered.bcf#"
