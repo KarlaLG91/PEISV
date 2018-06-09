@@ -1,0 +1,58 @@
+## DESCRIPTION:
+## mk module for the alignment of NGS reads to a reference genome, using FASTQ type of data. 
+## The script uses Burrow-Wheeler Aligner with Maximal Exact Matches (BWA_MEM) to map sequencing reads, from a FASTQ file,  against a reference genome.
+## Also, the script converts output SAM files to BAM files. Additionally, it sorts and index said BAM files.
+##
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+
+MKSHELL=/bin/bash
+
+# Load configurations from file
+< config.mk
+
+# Index sorted BAM
+#
+results/%_sorted.bam.bai:: results/%_sorted.bam
+        set -x
+        mkdir -p $(dirname $target)
+        samtools index $prereq
+	## NOTE: once samtools version is upgraded in WG server, check the syntax for asigning a custom name to the .bai file
+
+# Sort BAM file.
+#
+results/%_sorted.bam:: results/%.bam
+        set -x
+        mkdir -p $(dirname $target)
+        samtools sort -T results/$stem"_sorted" -O bam -o $target.build $prereq \
+        && mv $target.build $target
+
+# Convert SAM file to BAM file.
+#
+results/%.bam:: results/%.sam
+        #set -x
+        mkdir -p $(dirname $target)
+        samtools view -bSh $prereq > $target.build \
+        && mv $target.build $target
+
+# Mapping sequencing reads to reference using BWA MEM
+# for paired-end data
+results/%.sam:: data/%1.fq data/%2.fq
+        set -x
+        mkdir -p $(dirname $target)
+        bwa mem \
+		-t 2 \
+		$REFERENCE data/$stem"1.fq" data/$stem"2.fq" > $target.build \
+        && mv $target.build $target
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/

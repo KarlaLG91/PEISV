@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT
+## USAGE:
+##	bin/create-targets
+
+# Generate targets for FASTQ files to map against a reference genome using BWA-MEM.
+find -L data/ \
+	-type f \
+	-name "*1.fq" \
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#1.fq#_sorted.bam.bai#" \
