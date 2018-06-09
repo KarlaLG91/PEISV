@@ -1,0 +1,55 @@
+## DESCRIPTION:
+## mk module for read simulation including paired end, single end and mate pair, using FASTA type of data. 
+## The script uses ART to simulate single-end, paired-end and mate pair sequencing reads of the three main commercial next-generation sequencing platforms: 454, Illumina and SOLiD, form a genome in a FASTA file form.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+
+MKSHELL=/bin/bash
+
+# Load configurations from file 
+< config.mk
+
+# Simulate reads from a FASTA file with simulated SV, using ART.
+#
+results/%:: data/%.fasta 
+	set -x
+	mkdir -p $(dirname $target)
+#
+# For paired end
+#
+	if [[ $READ_TYPE == "paired_end" ]]; then
+	art_illumina -ss $SEQ_SYSTEM -i $prereq -p -na \
+	-l $READ_LENGTH -f $COV -m $SIZE -s $STD -o $target"_$READ_TYPE".build
+	fi  
+#
+# For single end reads
+#
+	if [[ $READ_TYPE == "single_end" ]]; then
+	art_illumina -ss $SEQ_SYSTEM -i $prereq -na \
+	-l $READ_LENGTH -f $COV -o $target"_$READ_TYPE".build
+	fi 
+#
+# For mate pair reads
+#
+	if [[ $READ_TYPE == "mate_pair" ]]; then
+	art_illumina -ss $SEQ_SYSTEM -i $prereq -mp -na \
+	-l $READ_LENGTH -f $COV -m $SIZE -s $STD -o $target"_$READ_TYPE".build
+	fi \
+	&& for file in results/*.build*.fq
+	do
+	NEWNAME=`echo $file | sed "s#.build##"`
+	mv -- "$file" "$NEWNAME"
+	done
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/
