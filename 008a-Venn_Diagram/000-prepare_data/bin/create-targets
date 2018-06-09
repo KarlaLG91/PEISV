@@ -1,0 +1,15 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT.
+## USAGE:
+##	bin/create-targets
+
+# Generate targets for overlap files to generate input files to create Venn Diagrams
+
+find -L data/ \
+	-type f \
+	-name "*.txt"\
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.txt#.venndiagram.txt#"

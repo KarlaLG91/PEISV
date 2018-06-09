@@ -1,0 +1,43 @@
+## DESCRIPTION:
+## mk module for the generation of lists of SVs, resulting from the evaluation of overlap, to produce Venn Diagrams.
+## The script edits the TXT files from the overlap comparison to create lists with the intention of creating Venn Diagrams
+##
+## USAGE:
+## Alternative 1: Single target execution.
+##      `mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create_targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##      `bin/targets | xargs mk`
+##
+## AUTHOR:
+##      Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+
+MKSHELL=/bin/bash
+
+# Prepare lists of structural variants to create Venn Diagrams.
+#
+results/%.venndiagram.txt:: data/%.txt
+	set -x
+	mkdir -p $(dirname $target)
+## For DEL, DUP, INV 
+	awk '{if(found) print} /Overlap/{found=1}' $prereq > results/$stem.temp.build \
+	&& mv results/$stem.temp.build results/$stem.temp
+	awk '{print $1"\t"$2"\t"$3}' results/$stem.temp > results/$stem"1".temp.build \
+	&& mv results/$stem"1".temp.build results/$stem"1".temp
+	awk -F'\t' '$2!="NA"' results/$stem"1".temp > results/$stem"2".temp.build \
+	&& mv results/$stem"2".temp.build results/$stem"2".temp
+	awk '{print $1}' results/$stem"2".temp | grep -v Overlap | sed -e 's/^/inversions/' > $target.build \   ## sv type changes depending on the list to be created
+        && mv $target.build $target
+	rm results/*.temp
+## For INS
+#	sed -n '/Overlap_5prime/,/OverlapBpSeq_5prime/ p' $prereq | grep -v Overlap | awk '$2!=""' > results/$stem.temp.build \
+#        && mv results/$stem.temp.build results/$stem.temp
+#	awk '{print $1}' results/$stem.temp | sort -u | sed -e 's/^/insertions/'> $target.build \
+#        && mv $target.build $target
+#	rm results/*.temp
+
+### Add a "clean" recipe to quickly remove results directory
+### Use with care!!
+clean:V:
+	rm -r results/
