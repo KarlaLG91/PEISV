@@ -1,0 +1,38 @@
+## DESCRIPTION:
+## mk module for the detection of structural variation (SVs), using BAM type of data and a configuration file that specifies the locations of the map files, the detection parameters, and the sample information.
+## The script uses BreakDancer to detect SVs from a BAM file, and bam2cfg.pl to automatic generate the configuration file required in a .cfg format.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+# Generating configuration file.
+results/%.cfg:D: data/%.bam
+	mkdir -p $(dirname $target)
+	bam2cfg.pl \
+		$prereq \
+		> $target".build" \
+	&& mv $target".build" $target
+
+# Identifying structural variation using Breakdancer.
+results/%.ctx:D: results/%.cfg
+	mkdir -p $(dirname $target)
+	breakdancer-max \
+		-d $stem \
+		$prereq \
+		> $target".build" \
+	&& mv $target".build" $target
+	mv $stem".NA.1.fastq" results/
+	mv $stem".NA.2.fastq" results/
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/
