@@ -1,0 +1,15 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT.
+## USAGE:
+##	bin/create-targets
+
+## Create targets to mark duplicates in BAM file using Sambamba.
+
+find -L data/ \
+	-type f \
+	-name "*_sorted.bam" \
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.bam#.markdup.bam.bai#"

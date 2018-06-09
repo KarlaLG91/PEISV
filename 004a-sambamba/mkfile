@@ -1,0 +1,38 @@
+## DESCRIPTION:
+## mk module for the detection and marking of duplicates, using BAM type of data. 
+## The script uses SAMBAMBA to detect and mark duplicates from a BAM file and produces a new BAM file and its corresponding index.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+# Load configurations form file.
+< config.mk
+
+# Index sorted BAM.
+#
+results/%.markdup.bam.bai:: results/%.markdup.bam
+        set -x
+        mkdir -p $(dirname $target)
+        samtools index $prereq
+        ## NOTE: once samtools version is upgraded in WG server, check the syntax for asigning a custom name to the .bai file
+
+# Mark duplicates in BAM file.
+#
+results/%.markdup.bam: data/%.bam
+	set -x
+	mkdir -p $(dirname $target)
+	$SAMBAMBA markdup $prereq $target.build \
+	&& mv $target.build $target
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/
