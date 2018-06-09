@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##      Script to print required mk targets to STDOUT.
+## USAGE:
+##      bin/create-targets
+
+# Generate targets for genome references in FASTA format to generate indexes using BWA.
+find -L data/ \
+        -type f \
+        -name "*.fa"\
+| sed \
+        -e "s#data/#results/#" \
+

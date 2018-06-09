@@ -1,0 +1,15 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT.
+## USAGE:
+##	bin/create-targets
+
+# Generate targets for genome references in fasta format to be minimized to a set of specific chromosomes.
+
+find data/ \
+	-type f \
+	-name "*.fa" \
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.fa#.minimized.fa#"

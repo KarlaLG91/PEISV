@@ -1,0 +1,44 @@
+## DESCRIPTION:
+## mk module for the extraction of a set of chromosomes from a specified genome reference, using FASTA type files as data.  
+## The script uses The European Molecular Biology Open Software Suite (EMBOSS) function infoseq to obtain the names and respective lenghts of the chromosomes present in the regerence genome. 
+## Then, uses samtools faidx to extract the desired sequences of the chosen chromosomes from the genome reference FASTA file.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+
+MKSHELL=/bin/bash
+
+
+# Load configurations from file
+< config.mk
+
+# Extracting sequences of specified chromosomes from reference genome. 
+results/%.minimized6.fa:: data/%.fa results/%.contig_length.txt
+	#set -x
+	mkdir -p $(dirname $target)
+	> $target.build
+	while read contig
+	do
+		samtools faidx data/$stem.fa $contig >> $target.build
+		echo "[DEBUGG] extracting $contig"
+	done < <( grep "^REQUIRED_CONTIGS=" config.mk | cut -d'"' -f2 | tr "," "\n") \
+	&& mv $target.build $target
+
+# Creating a list of all chromosome names and respective lengths present in reference genome.
+results/%.contig_length.txt:Q: data/%.fa
+	#set -x
+	mkdir -p $(dirname $target)
+	infoseq $prereq -only -name -length > $target.build \
+	&& mv $target.build $target
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+        rm -r results/

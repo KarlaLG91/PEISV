@@ -1,0 +1,31 @@
+## DESCRIPTION:
+## mk module for indexing of genome references using BWA, using FASTA files as input.  
+## The script uses Burrows-Wheeler Aligner (BWA) to index genome references from a FASTA file.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+# Indexing reference using BWA.
+results/%.fa:: data/%.fa
+	set -x
+	mkdir -p $(dirname $target)
+	bwa index -p $target.build -a bwtsw $prereq \
+	&& for file in results/*.build*
+	do
+	NEWNAME=`echo $file | sed "s#.build##"`
+	mv -- "$file" "$NEWNAME"
+	done
+	cp $prereq results/
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/
