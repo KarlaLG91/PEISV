@@ -1,0 +1,36 @@
+## DESCRIPTION:
+## mk module for the simulation of structural variants (SVs), including deletions, duplications, inversions, insertions and translocations; using FASTA type of data. 
+## The script uses RSVSim to simulate SVs from a reference genome FASTA file.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+# Load configurations form file
+< config.mk
+
+# Simulate SV in fasta file format.
+#
+results/%:: data/%.fa
+	set -x
+	mkdir -p $target.build
+	Rscript --vanilla bin/RSVSim2.R $prereq $target.build $SV_size $SV_number $SV_TYPE \
+	&& mv $target.build $target"_$SV_TYPE" ## <- THIS LINE RENAMES THE OUTPUT DIR TO THE SVTYPE REQUESTED BY THE CONFIG.MK
+	for file in $target"_$SV_TYPE"/*.fasta
+	do
+	NEWNAME=`echo $file | sed "s#genome_rearranged#$stem"_$SV_TYPE"#"`
+	mv -- "$file" "$NEWNAME"
+	done
+
+### Add a "clean" recipe to quickly remove results directory
+### Use with care!!
+clean:V:
+	rm -r results/

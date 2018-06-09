@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT.
+## USAGE:
+##	bin/create-targets
+
+# Generate targets for FASTA files to generate simulated SV using RSVSim.
+find -L data/ \
+	-type f \
+	-name "*.fa"\
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.fa##"
