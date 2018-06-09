@@ -1,0 +1,40 @@
+## DESCRIPTION:
+## mk module for the conversion of files in VCF format generated with SvABA into a BED-like format. 
+## The script edits the VCF file to comply with the structure of a BED file format.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+# Converting VCF file to BED format for SV comparison.
+results/%_svaba.bed:: data/%.svaba.sv.vcf
+	set -x
+	mkdir -p $(dirname $target)
+## For DEL, DUP, INV
+	awk '{OFS="\t"; if (!/^#/){print $1,$2-1}}' $prereq > results/$stem.txt.build \
+        && mv results/$stem.txt.build results/$stem.txt
+	awk '{OFS="\t"; if (!/^#/){print $8}}' $prereq > results/$stem"1".txt.build \
+        && mv results/$stem"1".txt.build results/$stem"1".txt
+	sed 's/;/\n/g' results/$stem"1".txt | grep SPAN | sed 's/SPAN=//g' > results/$stem"2".txt.build \
+        && mv results/$stem"2".txt.build results/$stem"2".txt
+	paste results/$stem.txt results/$stem"2".txt > results/$stem"3".txt.build \
+        && mv results/$stem"3".txt.build results/$stem"3".txt
+	awk 'BEGIN{print "chr\tstart\tend"}{print $1"\t"$2"\t"$2+$3}' results/$stem"3".txt > $target.build \
+	&& mv $target.build $target
+	rm results/*.txt
+
+## For insertions svaba reports the deletion and insertion without no record of the relation amoung the events
+
+## For translocations there is no parameter for size.
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/

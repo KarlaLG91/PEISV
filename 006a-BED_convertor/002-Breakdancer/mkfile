@@ -1,0 +1,45 @@
+## DESCRIPTION:
+## mk module for the conversion of files in VCF format generated with SvABA into a BED-like format.
+## The script edits the VCF file to comply with the structure of a BED file format.
+##
+## USAGE:
+## Alternative 1: Single target execution.
+##      `mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##      `bin/targets | xargs mk`
+##
+## AUTHOR:
+##      Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+MKSHELL=/bin/bash
+
+# Converting VCF file to BED format for SV comparison.
+results/%_breakdancer.bed:: data/%.ctx
+	set -x
+	mkdir -p $(dirname $target)
+## For DEL, DUP and INV.
+	awk '{OFS="\t"; if (!/^#/){print $1,$2-1,$5,$7}}' $prereq > results/$stem.txt.build \
+        && mv results/$stem.txt.build results/$stem.txt
+	awk 'BEGIN{print "chr\tstart\tend\tsv_type"}{print $1"\t"$2"\t"$3"\t"$4}' results/$stem.txt > $target.build \
+	&& mv $target.build $target
+## To separate depending on SV type
+        grep "DEL" $target | awk '{print $1"\t"$2"\t"$3}' > results/$stem"_breakdancer_deletions".bed.build \
+        && mv results/$stem"_breakdancer_deletions".bed.build results/$stem"_breakdancer_deletions".bed
+        grep "INV" $target | awk '{print $1"\t"$2"\t"$3}' > results/$stem"_breakdancer_inversions".bed.build \
+        && mv results/$stem"_breakdancer_inversions".bed.build results/$stem"_breakdancer_inversions".bed
+        grep "ITX" $target | awk '{print $1"\t"$2"\t"$3}' > results/$stem"_breakdancer_duplications".bed.build \
+        && mv results/$stem"_breakdancer_duplications".bed.build results/$stem"_breakdancer_duplications".bed
+        rm results/*.txt
+
+
+## For INS and TRA
+#	grep -v DEL $prereq | awk '{OFS="\t"; if (!/^#/){print $1,$2-1,$2+1000,$4,$5-1,$5+1000}}' > results/$stem.txt.build \
+#        && mv results/$stem.txt.build results/$stem.txt
+#        awk 'BEGIN{print "chr\tstart1\tend1\tchr2\tstart2\tend2"}{print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6}' results/$stem.txt > $target.build \
+#        && mv $target.build $target
+#	rm results/*.txt
+
+### Add a "clean" recipe to quickly remove results directory
+clean:V:
+	rm -r results/

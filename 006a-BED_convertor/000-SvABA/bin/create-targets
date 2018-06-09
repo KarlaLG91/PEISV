@@ -1,0 +1,14 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##	Script to print required mk targets to STDOUT
+## USAGE:
+##	bin/create-targets
+
+# Generate targets for VCF files to be converted to a BED format.
+find -L data/ \
+	-type f \
+	-name "*.svaba.sv.vcf" \
+| sed \
+	-e "s#data/#results/#" \
+	-e "s#.svaba.sv.vcf#_svaba.bed#" \
