@@ -1,0 +1,15 @@
+#!/bin/bash
+##
+## DESCRIPTION:
+##      Script to print required mk targets to STDOUT
+## USAGE:
+##      bin/create-targets
+
+# Generate targets for BED files to compare overlap between estimated SVs and simulated SVs using RSVSim.
+find -L data/ \
+        -type f \
+        -name "*.bed" \
+| sed \
+        -e "s#data/#results/#" \
+        -e "s#.bed#_overlap.txt#" \
+

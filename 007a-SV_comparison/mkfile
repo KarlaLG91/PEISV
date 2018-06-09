@@ -1,0 +1,33 @@
+## DESCRIPTION:
+## mk module for the comparison of overlap between simulated structural variants (SVs) and estimated SVs from different tools, using BED type of data and a CSV file containing estimated SVs. 
+## The script uses RSVSim algorithm in order to compare overlap between simulated structural variants (SVs) and estimated SVs from a BED file, defining simulated SVs from a CSV file.
+## 
+## USAGE:
+## Alternative 1: Single target execution.
+##	`mk <SPECIFIC_TARGET>`; where SPECIFIC_TARGET is any line printed by the `/bin/create-targets` script in this module.
+##
+## Alternative 2: Multiple target tandem execution.
+##	`bin/targets | xargs mk` 
+##
+## AUTHOR:
+##	Karla Lozano (klg1219sh@gmail.com), for Winter Genomics (http://www.wintergenomics.com/) - 2018
+
+
+MKSHELL=/bin/bash
+
+# Load configurations form file
+< config.mk
+
+# Compare the overlap between estimated SVs and simulated ones.
+#
+results/%_overlap.txt:: data/%.bed
+	set -x
+	mkdir -p $(dirname $target)
+	Rscript --vanilla bin/RSVSim.R $SIMsv $prereq $target.build $TOL \
+	&& mv $target.build $target
+
+### Add a "clean" recipe to quickly remove results directory
+### Use with care!!
+clean:V:
+	rm -r results/
+
