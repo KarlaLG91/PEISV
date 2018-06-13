@@ -1,1 +1,138 @@
-##
+# mk-002a-ART - Pipeline for the simulation of synthetic next-generation sequencing reads.
+
+## About mk-002a-ART
+
+**Objective:**
+
+This module simulate three different types of sequencing reads of three major commercial next-generation sequencing plataforms.
+
+## Module description
+
+
+
+ART installation instructions can be found at: [https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) 
+ART publication can be found at: [https://academic.oup.com/bioinformatics/article/28/4/593/213322](https://academic.oup.com/bioinformatics/article/28/4/593/213322) 
+
+## Pipeline configuration
+
+### Data formats:
+
+**Input**
+
+- Genome in FASTA file format.
+
+**Output**
+
+- Reads in the FASTQ format.
+
+### Software dependencies:
+
+* [mk](https://9fans.github.io/plan9port/man/man1/mk.html "A successor for make.")
+
+* [ART-MountRainier-2016-06-05](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/index.cfm) 
+
+###Configuration file 
+
+This pipeline includes a config.mk file (located at mk-002a-ART/config.mk, where you can adjust the following parameters:
+
+````
+#Define the type of sequencing reads. (accepted types are paired_end, single_end and mate_pair)
+##Comment or uncomment lines to change type of sequencing reads being generated.
+
+READ_TYPE="paired_end"
+#READ_TYPE="single_end"
+#READ_TYPE="mate_pair"
+
+# Define the sequencing system. (accepted types are  GA1, GA2, HS10, HS20, HS25, HSXn, HSXt, MinS, MSv1, MSv3, NS50)
+# GA1 - GenomeAnalyzer I (36bp,44bp), GA2 - GenomeAnalyzer II (50bp, 75bp), HS10 - HiSeq 1000 (100bp), HS20 - HiSeq 2000 (100bp),
+# HS25 - HiSeq 2500 (125bp, 150bp), HSXn - HiSeqX PCR free (150bp), HSXt - HiSeqX TruSeq (150bp),MinS - MiniSeq TruSeq (50bp),
+# MSv1 - MiSeq v1 (250bp), MSv3 - MiSeq v3 (250bp), NS50 - NextSeq500 v2 (75bp)
+## Comment or uncomment lines to change the type of event being generated
+
+#SEQ_SYSTEM="GA1"
+#SEQ_SYSTEM="GA2"
+#SEQ_SYSTEM="HS10"
+#SEQ_SYSTEM="HS20"
+SEQ_SYSTEM="HS25"
+#SEQ_SYSTEM="HSXn"
+#SEQ_SYSTEM="MinS"
+#SEQ_SYSTEM="MSv1"
+#SEQ_SYSTEM="MSv3"
+#SEQ_SYSTEM="NS50"
+
+# Define the read length. (depends on the sequencing system)
+READ_LENGTH=Must be a numerical number specifying the read length.
+
+# Define the read coverage.
+COV=Must be a numerical number specifying the read coverage.
+
+# Define the mean size of the DNA fragment for paired-end simulation.
+SIZE=Must be a numerical number specifying the insert size for paired-end simulation.
+
+# Define the standard deviation of DNA fragment size for paired-end simulation.
+STD=Must be a numerical number specifying the standard deviation of the insert size.
+````
+
+### Module parameters
+
+Used by ART: 
+
+````
+## Illumina read simulation
+# For paired end
+	if [[ $READ_TYPE == "paired_end" ]]; then	-> In case of simulating paired-end reads 
+	art_illumina -ss $SEQ_SYSTEM \			-> Defining sequencing system
+	-i $prereq \							-> Input file
+	-p \									-> Setting for paired-end reads
+	-na \								-> No alignment output
+	-l $READ_LENGTH \					-> Defining read length
+	-f $COV \								-> Specifying coverage
+	-m $SIZE \							-> Setting insert size
+	-s $STD \								-> Specifying the insert standard deviation.
+	-o $target"_$READ_TYPE".build			-> Defining output file
+	fi 
+
+# For single end reads
+	if [[ $READ_TYPE == "single_end" ]]; then	-> In case of simulating single end reads 
+	art_illumina -ss $SEQ_SYSTEM \			-> Defining sequencing system
+	-i $prereq \							-> Input file
+	-na \								-> No alignment output
+	-l $READ_LENGTH \					-> Defining read length
+	-f $COV \								-> Specifying coverage
+	-o $target"_$READ_TYPE".build			-> Defining output file
+	fi 
+
+# For mate pair reads
+	if [[ $READ_TYPE == "mate_pair" ]]; then	-> In case of simulating mate pair reads 
+	art_illumina -ss $SEQ_SYSTEM \			-> Defining sequencing system
+	-i $prereq \							-> Input file
+	-mp \								-> Setting for mate pair reads
+	-na \								-> No alignment output
+	-l $READ_LENGTH \					-> Defining read length
+	-f $COV \								-> Specifying coverage
+	-m $SIZE \							-> Setting insert size
+	-s $STD \								-> Specifying the insert standard deviation.
+	-o $target"_$READ_TYPE".build			-> Defining output file
+	fi \
+````
+
+## mk-002a-ART directory structure
+
+````
+mk-001a-RSVSim 			##Module main directory.
+├── bin					##Executables directory.
+│      └── create-targets		##Script to print every file required by this module.
+├── config.mk				##Configuration file for this module.
+├── data -> **MISSING**	##Symbolic link to data for processing
+├── mkfile				##File in mk format, specifying the rules for building every result requested by bin/create_targets.
+├── README.md			##This document. General workflow description.
+└── results				##Storage directory for files built by mkfile. If it does not exist, it is automatically generated by mkfile.
+````
+
+## References.
+
+\[1\] [ART algorithm](https://academic.oup.com/bioinformatics/article/28/4/593/213322) 
+\[2\] [FASTQ format](http://support.illumina.com/content/dam/illumina-support/help/BaseSpaceHelp_v2/Content/Vault/Informatics/Sequencing_Analysis/BS/swSEQ_mBS_FASTQFiles.htm) 
+
+### Author info.
+Developed by Karla Lozano (klg1219sh@gmail.com) for [Winter Genomics](http://www.wintergenomics.com/) 2018.
